@@ -49,11 +49,11 @@ price = data["Quotes"][0]["MinPrice"]
 
 # Connect to Google Sheets
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+creds = ServiceAccountCredentials.from_json_keyfile_name('nodal-operand-376812-7ff1deb55dbe.json', scope)
 client = gspread.authorize(creds)
 
 # Open the Google Sheet
-sheet = client.open("Skyscanner Flights").sheet1
+sheet = client.open("flight-checker-app").sheet1
 
 # Get the current date and time
 now = datetime.datetime.now()
