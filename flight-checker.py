@@ -1,62 +1,50 @@
-Python app:
-
 import requests
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import datetime
 
-# Skyscanner API endpoint for flight prices
-endpoint = "http://partners.api.skyscanner.net/apiservices/browseroutes/v1.0/{country}/{currency}/{locale}/{originPlace}/{destinationPlace}/{outboundPartialDate}/{inboundPartialDate}?apiKey={api_key}"
+# Function to get the cheapest flight price from Porto to Wroclaw
+def get_cheapest_flight_price(from_city, to_city):
+    url = "https://skyscanner-skyscanner-flight-search-v1.p.rapidapi.com/apiservices/browsequotes/v1.0/PT/EUR/en-US/" + from_city + "/" + to_city + "/anytime"
 
-# Replace with your Skyscanner API key
-api_key = "prtl6749387986743898559646983194"
+    headers = {
+        "X-RapidAPI-Host": "skyscanner-skyscanner-flight-search-v1.p.rapidapi.com",
+        "X-RapidAPI-Key": "219b221a3fmsha9763c52a9a6d6fp1e986djsn6772c106a918"
+    }
 
-# Replace with your origin and destination
-originPlace = "OPO-sky"
-destinationPlace = "WRO-sky"
+    response = requests.get(url, headers=headers)
+    data = response.json()
 
-# Replace with your country, currency and locale
-country = "PT"
-currency = "EUR"
-locale = "pt-PT"
+    # Get the cheapest price from the response
+    cheapest_price = data["MinPrice"]
 
-# Replace with your desired outbound and inbound dates
-outboundPartialDate = "anytime"
-inboundPartialDate = "anytime"
+    return cheapest_price
 
-# Construct the URL for the API request
-url = endpoint.format(country=country, currency=currency, locale=locale, 
-                      originPlace=originPlace, destinationPlace=destinationPlace, 
-                      outboundPartialDate=outboundPartialDate, inboundPartialDate=inboundPartialDate, api_key=api_key)
+# Function to update the Google Sheet with the data
+def update_google_sheet(datetime, carrier, flight_day_and_time, flight_price_in_euros):
+    # Authenticate to Google Sheets API
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+    credentials = ServiceAccountCredentials.from_json_keyfile_name("nodal-operand-376812-7ff1deb55dbe.json", scope)
+    client = gspread.authorize(credentials)
 
-# Make the API request
-response = requests.get(url)
+    # Open the Google Sheet
+    sheet = client.open("flight-checker-app").sheet1
 
-# Parse the JSON response
-data = response.json()
+    # Append the data to the sheet
+    sheet.append_row([datetime, carrier, flight_day_and_time, flight_price_in_euros])
 
-# Get the first result (cheapest flight)
-flight = data["Quotes"][0]
+# Main program logic
+if __name__ == "__main__":
+    while True:
+        # Get the cheapest flight price
+        price = get_cheapest_flight_price("OPO", "WRO")
 
-# Get the flight carrier
-carrier = data["Carriers"][0]["Name"]
+        # Get the current date and time
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        time = datetime.datetime.now().strftime("%H:%M:%S")
 
-# Get the flight date
-date = data["Quotes"][0]["OutboundLeg"]["DepartureDate"]
+        # Update the Google Sheet with the data
+        update_google_sheet(date, "<flight-carrier>", time, price)
 
-# Get the flight price
-price = data["Quotes"][0]["MinPrice"]
-
-# Connect to Google Sheets
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-creds = ServiceAccountCredentials.from_json_keyfile_name('nodal-operand-376812-7ff1deb55dbe.json', scope)
-client = gspread.authorize(creds)
-
-# Open the Google Sheet
-sheet = client.open("flight-checker-app").sheet1
-
-# Get the current date and time
-now = datetime.datetime.now()
-
-# Append the new data to the Google Sheet
-sheet.append_row([now, carrier, date, price])
+        # Wait for 1 hour before checking again
+        time.sleep(3600)
