@@ -47,4 +47,4 @@ if __name__ == "__main__":
         update_google_sheet(date, "<flight-carrier>", time, price)
 
         # Wait for 1 hour before checking again
-        time.sleep(3600)
+        time.sleep(360)
