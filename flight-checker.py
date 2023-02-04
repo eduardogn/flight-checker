@@ -9,7 +9,7 @@ import datetime
 endpoint = "http://partners.api.skyscanner.net/apiservices/browseroutes/v1.0/{country}/{currency}/{locale}/{originPlace}/{destinationPlace}/{outboundPartialDate}/{inboundPartialDate}?apiKey={api_key}"
 
 # Replace with your Skyscanner API key
-api_key = "your_api_key"
+api_key = "prtl6749387986743898559646983194"
 
 # Replace with your origin and destination
 originPlace = "OPO-sky"
